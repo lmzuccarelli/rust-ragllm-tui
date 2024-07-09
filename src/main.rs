@@ -148,11 +148,15 @@ impl App {
             .body(query_json)
             .send()
             .await;
-        let byte_vec = res.unwrap().bytes().await.unwrap();
-        let payload = String::from_utf8(byte_vec.to_vec()).unwrap();
-        let resp_json: ResponseDetails = serde_json::from_str(&payload).unwrap();
-
-        self.message = resp_json.data;
+        if res.is_err() {
+            self.message =
+                res.as_ref().err().unwrap().to_string() + &" (is the backend service running ? )";
+        } else {
+            let byte_vec = res.unwrap().bytes().await.unwrap();
+            let payload = String::from_utf8(byte_vec.to_vec()).unwrap();
+            let resp_json: ResponseDetails = serde_json::from_str(&payload).unwrap();
+            self.message = resp_json.data;
+        }
         self.input.clear();
         self.reset_cursor();
     }
